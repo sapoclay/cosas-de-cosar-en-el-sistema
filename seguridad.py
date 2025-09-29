@@ -1,9 +1,24 @@
-# seguridad.py
+"""
+Módulo de seguridad: Herramientas básicas para gestión de seguridad en Linux.
+
+Este módulo proporciona funciones para gestionar permisos de archivos, propietarios,
+configuración de firewall (ufw), verificación de integridad de archivos mediante hashes MD5,
+gestión de configuración SSH y verificación de usuarios con permisos sudo.
+Todas las funciones incluyen manejo de errores y solicitan confirmación para operaciones sensibles.
+"""
+
 from colores import *
 import subprocess
 import os
 
 def gestionar_permisos():
+    """
+    Función para gestionar permisos de archivos y directorios usando el comando chmod.
+    
+    Solicita al usuario la ruta del archivo/directorio y los permisos deseados (ej. 755, u+x).
+    Ejecuta el comando chmod con subprocess y muestra el resultado de la operación.
+    Manejo de errores: Captura excepciones generales y muestra mensajes de error en rojo.
+    """
     archivo = input(f"{COLOR_NARANJA}Introduce la ruta del archivo/directorio: {COLOR_RESET}")
     permisos = input(f"{COLOR_NARANJA}Introduce los permisos (ej. 755, u+x, etc.): {COLOR_RESET}")
     print(f"{COLOR_AMARILLO}Cambiando permisos de {archivo} a {permisos}...{COLOR_RESET}")
@@ -17,6 +32,14 @@ def gestionar_permisos():
         print(f"{COLOR_ROJO}Error: {e}{COLOR_RESET}")
 
 def cambiar_propietario():
+    """
+    Función para cambiar el propietario y grupo de archivos o directorios usando chown.
+    
+    Solicita la ruta del archivo, el nuevo propietario y opcionalmente el grupo.
+    Construye el comando chown según si se especifica grupo o no.
+    Ejecuta el comando y muestra el resultado.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
     archivo = input(f"{COLOR_NARANJA}Introduce la ruta del archivo/directorio: {COLOR_RESET}")
     usuario = input(f"{COLOR_NARANJA}Introduce el nuevo propietario: {COLOR_RESET}")
     grupo = input(f"{COLOR_NARANJA}Introduce el nuevo grupo (opcional, presiona Enter para omitir): {COLOR_RESET}")
@@ -35,6 +58,15 @@ def cambiar_propietario():
         print(f"{COLOR_ROJO}Error: {e}{COLOR_RESET}")
 
 def configurar_firewall():
+    """
+    Función para configurar el firewall usando ufw (Uncomplicated Firewall).
+    
+    Muestra el estado actual del firewall, luego permite habilitar/deshabilitar,
+    permitir/denegar reglas, o recargar la configuración.
+    Para allow/deny, solicita la regla específica (ej. 22/tcp).
+    Ejecuta comandos sudo ufw y muestra resultados.
+    Manejo de errores: Captura excepciones al obtener estado o ejecutar comandos.
+    """
     print(f"{COLOR_AMARILLO}Estado actual del firewall (ufw):{COLOR_RESET}")
     try:
         resultado = subprocess.run(["sudo", "ufw", "status"], capture_output=True, text=True)
@@ -64,6 +96,14 @@ def configurar_firewall():
         print(f"{COLOR_ROJO}Error: {e}{COLOR_RESET}")
 
 def verificar_integridad():
+    """
+    Función para verificar la integridad de archivos calculando y comparando hashes MD5.
+    
+    Solicita la ruta del archivo y opcionalmente el hash MD5 original.
+    Calcula el hash usando md5sum y lo compara si se proporciona el original.
+    Muestra el hash calculado y el resultado de la comparación.
+    Manejo de errores: Captura excepciones y errores de comando.
+    """
     archivo = input(f"{COLOR_NARANJA}Introduce la ruta del archivo a verificar: {COLOR_RESET}")
     hash_original = input(f"{COLOR_NARANJA}Introduce el hash MD5 original (opcional, presiona Enter para calcular): {COLOR_RESET}")
     print(f"{COLOR_AMARILLO}Calculando hash MD5 de {archivo}...{COLOR_RESET}")
@@ -83,6 +123,14 @@ def verificar_integridad():
         print(f"{COLOR_ROJO}Error: {e}{COLOR_RESET}")
 
 def gestionar_ssh():
+    """
+    Función para gestionar la configuración básica de SSH (sshd_config).
+    
+    Muestra configuración actual del puerto y PermitRootLogin.
+    Permite cambiar el puerto SSH o la política de login de root.
+    Usa sed para modificar el archivo de configuración y recuerda reiniciar SSH.
+    Manejo de errores: Captura excepciones al leer/escribir archivo o ejecutar comandos.
+    """
     print(f"{COLOR_AMARILLO}Configuración actual de SSH:{COLOR_RESET}")
     try:
         with open("/etc/ssh/sshd_config", "r") as f:
@@ -120,6 +168,13 @@ def gestionar_ssh():
         print(f"{COLOR_ROJO}Opción no válida.{COLOR_RESET}")
 
 def verificar_usuarios_sudo():
+    """
+    Función para verificar y listar usuarios con permisos sudo.
+    
+    Obtiene los miembros del grupo 'sudo' usando getent group sudo.
+    Lista los usuarios encontrados.
+    Manejo de errores: Captura excepciones y errores de comando.
+    """
     print(f"{COLOR_AMARILLO}Usuarios con permisos sudo:{COLOR_RESET}")
     try:
         resultado = subprocess.run(["getent", "group", "sudo"], capture_output=True, text=True)
@@ -135,6 +190,10 @@ def verificar_usuarios_sudo():
         print(f"{COLOR_ROJO}Error: {e}{COLOR_RESET}")
 
 def main_menu():
+    """
+    Función del menú principal para herramientas de seguridad.
+
+    """
     while True:
         print(f"{COLOR_CIAN}{TEXTO_NEGRITA}\n--- HERRAMIENTAS DE SEGURIDAD BÁSICA ---{COLOR_RESET}")
         print(f"{COLOR_VERDE}1. Gestionar permisos de archivos (chmod){COLOR_RESET}")

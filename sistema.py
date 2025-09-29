@@ -1,48 +1,14 @@
+"""
+Módulo de sistema: Herramientas para monitoreo y obtención de información del sistema.
+
+Este módulo proporciona funciones para mostrar información detallada del sistema operativo,
+hardware (CPU, memoria, discos, batería, USB, gráfica), procesos en ejecución,
+estadísticas de red, y monitoreo en tiempo real. Utiliza bibliotecas como psutil,
+platform, subprocess y comandos del sistema para recopilar datos.
+"""
+
 import subprocess
-def mostrar_equipos_red():
-    print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Equipos conectados en la red local:{COLOR_RESET}")
-    try:
-        red = input(f"{COLOR_NARANJA}Introduce el rango de red a escanear (ejemplo: 192.168.1.0/24): {COLOR_RESET}")
-        print(f"{COLOR_AMARILLO}Escaneando la red con nmap, esto puede tardar unos segundos...{COLOR_RESET}")
-        resultado = subprocess.run(["sudo", "nmap", "-O", "-sS", "-sU", "-p-", "-T4", "-v", "-A", red], capture_output=True, text=True)
-        print(f"{COLOR_VERDE}Resultado del escaneo:{COLOR_RESET}")
-        print(resultado.stdout)
-    except Exception as e:
-        print(f"{COLOR_ROJO}Error al detectar equipos en la red: {e}{COLOR_RESET}")
 import os
-def mostrar_info_bateria():
-    print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Información de la batería:{COLOR_RESET}")
-    try:
-        import psutil
-        bateria = psutil.sensors_battery()
-        if bateria:
-            print(f"Porcentaje: {bateria.percent}%")
-            print(f"Tiempo restante: {bateria.secsleft // 60} minutos" if bateria.secsleft != psutil.POWER_TIME_UNLIMITED else "Tiempo restante: ilimitado")
-            print(f"¿Cargando?: {'Sí' if bateria.power_plugged else 'No'}")
-        else:
-            print(f"{COLOR_AMARILLO}No se detectó batería en este sistema.{COLOR_RESET}")
-    except Exception as e:
-        print(f"{COLOR_ROJO}Error al obtener información de la batería: {e}{COLOR_RESET}")
-
-def mostrar_info_usb():
-    print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Dispositivos USB conectados:{COLOR_RESET}")
-    try:
-        os.system("lsusb")
-    except Exception as e:
-        print(f"{COLOR_ROJO}Error al obtener información de los dispositivos USB: {e}{COLOR_RESET}")
-
-def mostrar_info_uptime():
-    print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Tiempo de actividad del sistema:{COLOR_RESET}")
-    try:
-        with open('/proc/uptime', 'r') as f:
-            uptime_seconds = float(f.readline().split()[0])
-            horas = int(uptime_seconds // 3600)
-            minutos = int((uptime_seconds % 3600) // 60)
-            print(f"El sistema lleva encendido: {horas} horas y {minutos} minutos.")
-    except Exception as e:
-        print(f"{COLOR_ROJO}Error al obtener el tiempo de actividad: {e}{COLOR_RESET}")
-# requisito pip install psutil
-
 import psutil
 import shutil
 import platform
@@ -54,7 +20,72 @@ from colores import (
     TEXTO_NEGRITA, TEXTO_SUBRAYADO
 )
 
+def mostrar_equipos_red():
+    """   
+    Solicita el rango de red (ej. 192.168.1.0/24) y ejecuta un escaneo completo con nmap
+    incluyendo detección de OS, puertos y servicios. Muestra el resultado del escaneo.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
+    print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Equipos conectados en la red local:{COLOR_RESET}")
+    try:
+        red = input(f"{COLOR_NARANJA}Introduce el rango de red a escanear (ejemplo: 192.168.1.0/24): {COLOR_RESET}")
+        print(f"{COLOR_AMARILLO}Escaneando la red con nmap, esto puede tardar unos segundos...{COLOR_RESET}")
+        resultado = subprocess.run(["sudo", "nmap", "-O", "-sS", "-sU", "-p-", "-T4", "-v", "-A", red], capture_output=True, text=True)
+        print(f"{COLOR_VERDE}Resultado del escaneo:{COLOR_RESET}")
+        print(resultado.stdout)
+    except Exception as e:
+        print(f"{COLOR_ROJO}Error al detectar equipos en la red: {e}{COLOR_RESET}")
+
+def mostrar_info_bateria():
+    """    
+    Obtiene porcentaje de carga, tiempo restante y estado de carga.
+    Si no hay batería, informa al usuario.
+    Manejo de errores: Captura excepciones al acceder a sensores.
+    """
+    print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Información de la batería:{COLOR_RESET}")
+    try:
+        bateria = psutil.sensors_battery()
+        if bateria:
+            print(f"Porcentaje: {bateria.percent}%")
+            print(f"Tiempo restante: {bateria.secsleft // 60} minutos" if bateria.secsleft != psutil.POWER_TIME_UNLIMITED else "Tiempo restante: ilimitado")
+            print(f"¿Cargando?: {'Sí' if bateria.power_plugged else 'No'}")
+        else:
+            print(f"{COLOR_AMARILLO}No se detectó batería en este sistema.{COLOR_RESET}")
+    except Exception as e:
+        print(f"{COLOR_ROJO}Error al obtener información de la batería: {e}{COLOR_RESET}")
+
+def mostrar_info_usb():
+    """    
+    Ejecuta lsusb para listar todos los dispositivos USB conectados.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
+    print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Dispositivos USB conectados:{COLOR_RESET}")
+    try:
+        os.system("lsusb")
+    except Exception as e:
+        print(f"{COLOR_ROJO}Error al obtener información de los dispositivos USB: {e}{COLOR_RESET}")
+
+def mostrar_info_uptime():
+    """  
+    Lee el archivo /proc/uptime, calcula horas y minutos de uptime y los muestra.
+    Manejo de errores: Captura excepciones al leer el archivo.
+    """
+    print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Tiempo de actividad del sistema:{COLOR_RESET}")
+    try:
+        with open('/proc/uptime', 'r') as f:
+            uptime_seconds = float(f.readline().split()[0])
+            horas = int(uptime_seconds // 3600)
+            minutos = int((uptime_seconds % 3600) // 60)
+            print(f"El sistema lleva encendido: {horas} horas y {minutos} minutos.")
+    except Exception as e:
+        print(f"{COLOR_ROJO}Error al obtener el tiempo de actividad: {e}{COLOR_RESET}")
+
 def mostrar_info_sistema():
+    """    
+    Utiliza platform para obtener nombre del sistema, OS, versión; getpass para usuario;
+    socket para FQDN; psutil para uso de CPU y memoria.
+    No requiere parámetros, muestra directamente la información.
+    """
     print("--- Información del sistema ---")
     print("Nombre del sistema: ", platform.node())
     print("Sistema operativo: ", platform.system())
@@ -65,6 +96,13 @@ def mostrar_info_sistema():
     print("Memoria RAM: ", psutil.virtual_memory().percent, "%")
 
 def sizeof_fmt(num, suffix='B'):
+    """
+    Función auxiliar para formatear tamaños en bytes a unidades legibles (KB, MB, GB, etc.).
+    
+    Parámetros: num (número en bytes), suffix (sufijo, por defecto 'B').
+    Itera dividiendo por 1024 hasta encontrar la unidad apropiada.
+    Retorna string formateado con 1 decimal.
+    """
     # Función auxiliar para formatear tamaños en bytes a una representación más legible
     for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
         if abs(num) < 1024.0:
@@ -73,6 +111,12 @@ def sizeof_fmt(num, suffix='B'):
     return "%.1f %s%s" % (num, 'Y', suffix)
 
 def mostrar_info_discos():
+    """
+    Función para mostrar información de los discos duros usando psutil.
+    
+    Lista todas las particiones, sistema de archivos, y espacio total/usado/libre.
+    Utiliza sizeof_fmt para formatear los tamaños.
+    """
     print("--- Información del disco duro ---")
     discos = psutil.disk_partitions()
     for disco in discos:
@@ -93,8 +137,12 @@ def mostrar_info_discos():
         print("Espacio usado: ", espacio_usado_fmt)
         print("Espacio libre: ", espacio_libre_fmt)
 
-
 def mostrar_info_memoria():
+    """
+    Función para mostrar información de la memoria RAM usando psutil.
+    
+    Muestra total, disponible, usada en GB y porcentaje utilizado.
+    """
     print("--- Información de la memoria RAM ---")
     memoria = psutil.virtual_memory()
     print("Total: ", memoria.total / (1024**3), "GB")
@@ -103,6 +151,11 @@ def mostrar_info_memoria():
     print("Porcentaje utilizado: ", memoria.percent, "%")
 
 def mostrar_info_cpu():
+    """
+    Función para mostrar información de la CPU usando psutil.
+    
+    Muestra porcentaje de uso por núcleo y promedio general.
+    """
     print("--- Información de la CPU ---")
     # Mostrar porcentaje de uso de la CPU por núcleo
     for i, porcentaje in enumerate(psutil.cpu_percent(interval=1, percpu=True)):
@@ -111,6 +164,11 @@ def mostrar_info_cpu():
     print("Promedio de uso de la CPU: ", psutil.cpu_percent(interval=1), "%")
 
 def mostrar_info_red():
+    """
+    Función para mostrar estadísticas de red usando psutil.
+    
+    Muestra bytes enviados y recibidos desde el inicio del sistema.
+    """
     print("--- Información de la red ---")
     # Obtener estadísticas de la red
     estadisticas = psutil.net_io_counters()
@@ -118,6 +176,10 @@ def mostrar_info_red():
     print("Bytes recibidos: ", estadisticas.bytes_recv)
 
 def mostrar_info_procesos():
+    """    
+    Lista nombre, PID, uso de CPU y memoria de cada proceso.
+    Manejo de errores: Ignora procesos no accesibles.
+    """
     print("--- Información de los procesos en ejecución ---")
     # Obtener una lista de procesos
     procesos = psutil.process_iter()
@@ -136,6 +198,11 @@ def mostrar_info_procesos():
             pass
 
 def mostrar_info_sistema_archivos():
+    """    
+    Lista todas las particiones con dispositivo, punto de montaje, tipo FS, opciones,
+    y espacio total/usado/libre en GB.
+    Manejo de errores: Ignora particiones sin permisos.
+    """
     print("--- Información del sistema de archivos ---")
     particiones = psutil.disk_partitions(all=True)
     for particion in particiones:
@@ -152,8 +219,12 @@ def mostrar_info_sistema_archivos():
             print("No se puede acceder a la información del espacio en disco.")
         print("--------------------")
 
-
 def matar_proceso():
+    """
+    Función para terminar un proceso por su PID usando psutil.
+    
+    Solicita el PID al usuario, obtiene el proceso y lo mata.
+    """
     pid = input("Escribe el PID del proceso a matar: ")
     try:
         proceso = psutil.Process(int(pid))
@@ -164,8 +235,13 @@ def matar_proceso():
 
 # Función principal del programa
 def mostrar_info_tarjeta_grafica():
+    """
+    Función para mostrar información de la tarjeta gráfica usando lspci.
+    
+    Ejecuta lspci -nnk y filtra líneas con controladores VGA o 3D.
+
+    """
     print("--- Información de la tarjeta gráfica ---")
-    import subprocess
     try:
         resultado = subprocess.check_output(["lspci", "-nnk"], universal_newlines=True)
         graficas = [line for line in resultado.split('\n') if 'VGA compatible controller' in line or '3D controller' in line]
@@ -177,8 +253,12 @@ def mostrar_info_tarjeta_grafica():
     except Exception as e:
         print("Error al obtener la información de la tarjeta gráfica:", e)
 
-
 def monitoreo_recursos_tiempo_real():
+    """   
+    Muestra uso de CPU, memoria y disco cada 2 segundos en un bucle.
+    Limpia pantalla cada actualización. Se detiene con Ctrl+C.
+    Manejo de interrupción: Captura KeyboardInterrupt.
+    """
     import time
     print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Monitoreo de recursos en tiempo real (presiona Ctrl+C para detener):{COLOR_RESET}")
     print(f"{COLOR_AMARILLO}Actualizando cada 2 segundos...{COLOR_RESET}")
@@ -201,8 +281,10 @@ def monitoreo_recursos_tiempo_real():
     except KeyboardInterrupt:
         print(f"\n{COLOR_NARANJA}Monitoreo detenido por el usuario.{COLOR_RESET}")
 
-
 def main_menu():
+    """   
+    Muestra menú con opciones para todas las funciones de monitoreo e información.
+    """
     while True:
         print(f"{COLOR_CIAN}{TEXTO_NEGRITA}\n--- MENÚ DE INFORMACIÓN DEL SISTEMA ---{COLOR_RESET}")
         print(f"{COLOR_VERDE}1. Mostrar información del sistema{COLOR_RESET}")

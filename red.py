@@ -1,4 +1,97 @@
-# --- NUEVAS FUNCIONES STUB ---
+# Módulo para herramientas de red y conectividad en Linux.
+# Incluye escaneos con nmap, detección de dispositivos, análisis de vulnerabilidades, y gestión de red.
+
+from colores import *
+import psutil
+import subprocess
+
+# Mostrar estadísticas básicas de red usando psutil
+def mostrar_info_red():
+    print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Información de la red:{COLOR_RESET}")
+    estadisticas = psutil.net_io_counters()
+    print(f"Bytes enviados: {estadisticas.bytes_sent}")
+    print(f"Bytes recibidos: {estadisticas.bytes_recv}")
+
+# Función para detectar equipos conectados en la red local usando nmap
+def mostrar_equipos_red():
+    import sys
+    import re
+    print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Para buscar equipos conectados en la red local:{COLOR_RESET}")
+    try:
+        red = input(f"{COLOR_NARANJA}Introduce el rango de red a escanear (ejemplo: 192.168.1.0/24): {COLOR_RESET}")
+        print(f"{COLOR_AMARILLO}Escaneando la red con nmap, esto puede tardar unos segundos...{COLOR_RESET}")
+        comando = ["sudo", "nmap", "-sn", red]
+        with subprocess.Popen(comando, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, bufsize=1) as proc:
+            ip_actual = None
+            if proc.stdout:
+                for linea in proc.stdout:
+                    # Detectar IP activa
+                    if linea.startswith("Nmap scan report for"):
+                        ip_actual = linea.strip().split()[-1]
+                    elif "Host is up" in linea and ip_actual:
+                        print(f"{COLOR_VERDE}{TEXTO_NEGRITA}Dispositivo activo: {ip_actual}{COLOR_RESET}")
+                        ip_actual = None
+                    # Feedback visual: barra de progreso (si nmap lo muestra)
+                    elif "% done" in linea or "Scan Timing:" in linea or "remaining" in linea:
+                        porcentaje = re.search(r"([0-9.]+)% done", linea)
+                        if porcentaje:
+                            prog = float(porcentaje.group(1))
+                            barra = int(prog // 2)
+                            print(f"\r{COLOR_AMARILLO}[{'#'*barra}{'.'*(50-barra)}] {prog:.2f}%{COLOR_RESET}", end='')
+                        else:
+                            print(f"\r{COLOR_AMARILLO}{linea.strip()}{COLOR_RESET}", end='')
+                    sys.stdout.flush()
+                print()  # salto de línea al terminar
+            else:
+                print(f"{COLOR_ROJO}No se pudo obtener la salida de nmap.{COLOR_RESET}")
+    except KeyboardInterrupt:
+        print(f"\n{COLOR_NARANJA}Escaneo cancelado por el usuario.{COLOR_RESET}")
+    except Exception as e:
+        print(f"{COLOR_ROJO}Error al detectar equipos en la red: {e}{COLOR_RESET}")
+
+# Escanear puertos abiertos en una IP específica
+def escanear_puertos_ip():
+    import sys
+    import re
+    ip = input(f"{COLOR_NARANJA}Introduce la IP a escanear: {COLOR_RESET}")
+    print(f"{COLOR_AMARILLO}Escaneando puertos abiertos en {ip}...{COLOR_RESET}")
+    comando = ["sudo", "nmap", "-Pn", "-p-", ip]
+    puertos_abiertos = []
+    try:
+        with subprocess.Popen(comando, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, bufsize=1) as proc:
+            if proc.stdout:
+                for linea in proc.stdout:
+                    # Barra de progreso
+                    if "% done" in linea or "Scan Timing:" in linea or "remaining" in linea:
+                        porcentaje = re.search(r"([0-9.]+)% done", linea)
+                        if porcentaje:
+                            prog = float(porcentaje.group(1))
+                            barra = int(prog // 2)
+                            print(f"\r{COLOR_AMARILLO}[{'#'*barra}{'.'*(50-barra)}] {prog:.2f}%{COLOR_RESET}", end='')
+                        else:
+                            print(f"\r{COLOR_AMARILLO}{linea.strip()}{COLOR_RESET}", end='')
+                    # Detectar puertos abiertos
+                    elif re.search(r"^[0-9]+/tcp +open", linea):
+                        puertos_abiertos.append(linea.strip())
+                    elif "Nmap scan report for" in linea:
+                        print(f"\n{COLOR_CIAN}{TEXTO_NEGRITA}{linea.strip()}{COLOR_RESET}")
+                    sys.stdout.flush()
+                print()  # salto de línea al terminar
+                # Mostrar resultado final
+                if puertos_abiertos:
+                    print(f"{COLOR_VERDE}{TEXTO_NEGRITA}Puertos abiertos encontrados:{COLOR_RESET}")
+                    for puerto in puertos_abiertos:
+                        print(f"{COLOR_VERDE}{puerto}{COLOR_RESET}")
+                else:
+                    print(f"{COLOR_ROJO}No se encontraron puertos abiertos en la IP indicada.{COLOR_RESET}")
+            else:
+                print(f"{COLOR_ROJO}No se pudo obtener la salida de nmap.{COLOR_RESET}")
+    except KeyboardInterrupt:
+        print(f"\n{COLOR_NARANJA}Escaneo cancelado por el usuario.{COLOR_RESET}")
+    except Exception as e:
+        print(f"{COLOR_ROJO}Error al escanear la IP: {e}{COLOR_RESET}")
+
+# Función para detectar el sistema operativo remoto usando nmap
 def detectar_so_remoto():
     import sys
     ip = input(f"{COLOR_NARANJA}Introduce la IP a analizar: {COLOR_RESET}")
@@ -34,6 +127,7 @@ def detectar_so_remoto():
     except Exception as e:
         print(f"{COLOR_ROJO}Error al detectar el sistema operativo: {e}{COLOR_RESET}")
 
+# Escanear servicios específicos en puertos comunes
 def escanear_servicios_especificos():
     import sys
     ip = input(f"{COLOR_NARANJA}Introduce la IP a escanear: {COLOR_RESET}")
@@ -87,6 +181,7 @@ def escanear_servicios_especificos():
     except Exception as e:
         print(f"{COLOR_ROJO}Error al escanear servicios: {e}{COLOR_RESET}")
 
+# Función para exportar resultados de escaneo a un archivo
 def exportar_resultados():
     ip = input(f"{COLOR_NARANJA}Introduce la IP o rango a escanear para exportar resultados: {COLOR_RESET}")
     archivo = input(f"{COLOR_NARANJA}Nombre del archivo donde guardar el resultado (ejemplo: resultado.txt): {COLOR_RESET}")
@@ -103,6 +198,7 @@ def exportar_resultados():
     except Exception as e:
         print(f"{COLOR_ROJO}Error al exportar resultados: {e}{COLOR_RESET}")
 
+# Escanear vulnerabilidades básicas usando scripts de nmap
 def escaneo_vulnerabilidades():
     import sys
     ip = input(f"{COLOR_NARANJA}Introduce la IP o rango a analizar: {COLOR_RESET}")
@@ -138,6 +234,7 @@ def escaneo_vulnerabilidades():
     except Exception as e:
         print(f"{COLOR_ROJO}Error al escanear vulnerabilidades: {e}{COLOR_RESET}")
 
+# Función para enviar paquete Wake-on-LAN a una dirección MAC
 def wake_on_lan():
     import sys
     import socket
@@ -159,6 +256,7 @@ def wake_on_lan():
     except Exception as e:
         print(f"{COLOR_ROJO}Error al enviar Wake-on-LAN: {e}{COLOR_RESET}")
 
+# Monitorizar cambios en la red (dispositivos conectados/desconectados)
 def monitorizar_cambios_red():
     import time
     import sys
@@ -196,6 +294,7 @@ def monitorizar_cambios_red():
     except KeyboardInterrupt:
         print(f"\n{COLOR_NARANJA}Monitorización detenida por el usuario.{COLOR_RESET}")
 
+# Mostrar información detallada de interfaces de red
 def info_interfaces_red():
     import psutil
     import socket
@@ -215,6 +314,7 @@ def info_interfaces_red():
             print(f"  Velocidad: {st.speed} Mbps")
         print()
 
+# Escanear redes WiFi cercanas usando iwlist
 def escaneo_wifi():
     import subprocess
     print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Escaneando redes WiFi cercanas...{COLOR_RESET}")
@@ -246,6 +346,7 @@ def escaneo_wifi():
     except Exception as e:
         print(f"{COLOR_ROJO}Error al escanear WiFi: {e}{COLOR_RESET}")
 
+# Función para realizar test de velocidad de red (descarga y subida)
 def test_velocidad_red():
     import shutil
     import time
@@ -302,95 +403,9 @@ def test_velocidad_red():
     except Exception as e:
         print(f"{COLOR_ROJO}Error en test de subida: {e}{COLOR_RESET}")
 
-def gestion_firewall():
-    print(f"{COLOR_AMARILLO}Función de gestión de firewall local (pendiente de implementación).{COLOR_RESET}")
-def escanear_puertos_ip():
-    import sys
-    import re
-    ip = input(f"{COLOR_NARANJA}Introduce la IP a escanear: {COLOR_RESET}")
-    print(f"{COLOR_AMARILLO}Escaneando puertos abiertos en {ip}...{COLOR_RESET}")
-    comando = ["sudo", "nmap", "-Pn", "-p-", ip]
-    puertos_abiertos = []
-    try:
-        with subprocess.Popen(comando, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, bufsize=1) as proc:
-            if proc.stdout:
-                for linea in proc.stdout:
-                    # Barra de progreso
-                    if "% done" in linea or "Scan Timing:" in linea or "remaining" in linea:
-                        porcentaje = re.search(r"([0-9.]+)% done", linea)
-                        if porcentaje:
-                            prog = float(porcentaje.group(1))
-                            barra = int(prog // 2)
-                            print(f"\r{COLOR_AMARILLO}[{'#'*barra}{'.'*(50-barra)}] {prog:.2f}%{COLOR_RESET}", end='')
-                        else:
-                            print(f"\r{COLOR_AMARILLO}{linea.strip()}{COLOR_RESET}", end='')
-                    # Detectar puertos abiertos
-                    elif re.search(r"^[0-9]+/tcp +open", linea):
-                        puertos_abiertos.append(linea.strip())
-                    elif "Nmap scan report for" in linea:
-                        print(f"\n{COLOR_CIAN}{TEXTO_NEGRITA}{linea.strip()}{COLOR_RESET}")
-                    sys.stdout.flush()
-                print()  # salto de línea al terminar
-                # Mostrar resultado final
-                if puertos_abiertos:
-                    print(f"{COLOR_VERDE}{TEXTO_NEGRITA}Puertos abiertos encontrados:{COLOR_RESET}")
-                    for puerto in puertos_abiertos:
-                        print(f"{COLOR_VERDE}{puerto}{COLOR_RESET}")
-                else:
-                    print(f"{COLOR_ROJO}No se encontraron puertos abiertos en la IP indicada.{COLOR_RESET}")
-            else:
-                print(f"{COLOR_ROJO}No se pudo obtener la salida de nmap.{COLOR_RESET}")
-    except KeyboardInterrupt:
-        print(f"\n{COLOR_NARANJA}Escaneo cancelado por el usuario.{COLOR_RESET}")
-    except Exception as e:
-        print(f"{COLOR_ROJO}Error al escanear la IP: {e}{COLOR_RESET}")
-# red.py
-from colores import *
-import psutil
-import subprocess
 
-def mostrar_info_red():
-    print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Información de la red:{COLOR_RESET}")
-    estadisticas = psutil.net_io_counters()
-    print(f"Bytes enviados: {estadisticas.bytes_sent}")
-    print(f"Bytes recibidos: {estadisticas.bytes_recv}")
 
-def mostrar_equipos_red():
-    import sys
-    import re
-    print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Para buscar equipos conectados en la red local:{COLOR_RESET}")
-    try:
-        red = input(f"{COLOR_NARANJA}Introduce el rango de red a escanear (ejemplo: 192.168.1.0/24): {COLOR_RESET}")
-        print(f"{COLOR_AMARILLO}Escaneando la red con nmap, esto puede tardar unos segundos...{COLOR_RESET}")
-        comando = ["sudo", "nmap", "-sn", red]
-        with subprocess.Popen(comando, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, bufsize=1) as proc:
-            ip_actual = None
-            if proc.stdout:
-                for linea in proc.stdout:
-                    # Detectar IP activa
-                    if linea.startswith("Nmap scan report for"):
-                        ip_actual = linea.strip().split()[-1]
-                    elif "Host is up" in linea and ip_actual:
-                        print(f"{COLOR_VERDE}{TEXTO_NEGRITA}Dispositivo activo: {ip_actual}{COLOR_RESET}")
-                        ip_actual = None
-                    # Feedback visual: barra de progreso (si nmap lo muestra)
-                    elif "% done" in linea or "Scan Timing:" in linea or "remaining" in linea:
-                        porcentaje = re.search(r"([0-9.]+)% done", linea)
-                        if porcentaje:
-                            prog = float(porcentaje.group(1))
-                            barra = int(prog // 2)
-                            print(f"\r{COLOR_AMARILLO}[{'#'*barra}{'.'*(50-barra)}] {prog:.2f}%{COLOR_RESET}", end='')
-                        else:
-                            print(f"\r{COLOR_AMARILLO}{linea.strip()}{COLOR_RESET}", end='')
-                    sys.stdout.flush()
-                print()  # salto de línea al terminar
-            else:
-                print(f"{COLOR_ROJO}No se pudo obtener la salida de nmap.{COLOR_RESET}")
-    except KeyboardInterrupt:
-        print(f"\n{COLOR_NARANJA}Escaneo cancelado por el usuario.{COLOR_RESET}")
-    except Exception as e:
-        print(f"{COLOR_ROJO}Error al detectar equipos en la red: {e}{COLOR_RESET}")
-
+# Función principal del menú de red
 def main_menu():
     while True:
         print(f"{COLOR_CIAN}{TEXTO_NEGRITA}\n--- MENÚ DE RED LOCAL ---{COLOR_RESET}")
@@ -406,8 +421,7 @@ def main_menu():
         print(f"{COLOR_VERDE}10. Información de interfaces de red{COLOR_RESET}")
         print(f"{COLOR_VERDE}11. Escaneo de WiFi{COLOR_RESET}")
         print(f"{COLOR_VERDE}12. Test de velocidad de red{COLOR_RESET}")
-        print(f"{COLOR_VERDE}13. Gestión de firewall local{COLOR_RESET}")
-        print(f"{COLOR_ROJO}14. Volver al menú principal{COLOR_RESET}")
+        print(f"{COLOR_ROJO}13. Volver al menú principal{COLOR_RESET}")
         opcion = input(f"{COLOR_NARANJA}Selecciona una opción: {COLOR_RESET}")
         if opcion == "1":
             mostrar_info_red()
@@ -434,14 +448,14 @@ def main_menu():
         elif opcion == "12":
             test_velocidad_red()
         elif opcion == "13":
-            gestion_firewall()
-        elif opcion == "14":
             break
         else:
             print(f"{COLOR_ROJO}Opción no válida. Inténtalo de nuevo.{COLOR_RESET}")
 
+# Bloque principal para ejecutar el menú si el archivo se ejecuta directamente
 if __name__ == "__main__":
     try:
         main_menu()
     except KeyboardInterrupt:
+        #(Ctrl+C)
         print(f"\n{COLOR_ROJO}Programa cerrado por el usuario (Ctrl+C).{COLOR_RESET}")

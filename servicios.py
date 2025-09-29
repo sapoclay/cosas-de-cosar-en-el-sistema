@@ -1,8 +1,20 @@
-# servicios.py
+"""
+Módulo de servicios: Herramientas para gestión de servicios del sistema en Linux.
+
+Este módulo permite listar, iniciar, detener, reiniciar y consultar el estado de servicios
+del sistema utilizando systemctl. Todas las operaciones que requieren privilegios usan sudo.
+Incluye manejo de errores para operaciones fallidas.
+"""
+
 from colores import *
 import subprocess
 
 def listar_servicios():
+    """    
+    Utiliza el comando 'systemctl list-units --type=service' para mostrar la lista completa.
+    No requiere parámetros del usuario, ejecuta directamente el comando.
+    Manejo de errores: Captura excepciones y muestra mensajes de error.
+    """
     print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Servicios activos/inactivos:{COLOR_RESET}")
     try:
         subprocess.run(["systemctl", "list-units", "--type=service"], check=True)
@@ -10,6 +22,11 @@ def listar_servicios():
         print(f"{COLOR_ROJO}Error al listar servicios: {e}{COLOR_RESET}")
 
 def iniciar_servicio():
+    """    
+    Solicita el nombre del servicio al usuario y ejecuta 'sudo systemctl start <servicio>'.
+    Muestra mensaje de éxito si se inicia correctamente.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
     servicio = input(f"{COLOR_NARANJA}Introduce el nombre del servicio a iniciar: {COLOR_RESET}")
     try:
         subprocess.run(["sudo", "systemctl", "start", servicio], check=True)
@@ -18,6 +35,11 @@ def iniciar_servicio():
         print(f"{COLOR_ROJO}Error al iniciar servicio: {e}{COLOR_RESET}")
 
 def detener_servicio():
+    """    
+    Solicita el nombre del servicio y ejecuta 'sudo systemctl stop <servicio>'.
+    Muestra mensaje de éxito si se detiene correctamente.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
     servicio = input(f"{COLOR_NARANJA}Introduce el nombre del servicio a detener: {COLOR_RESET}")
     try:
         subprocess.run(["sudo", "systemctl", "stop", servicio], check=True)
@@ -26,6 +48,11 @@ def detener_servicio():
         print(f"{COLOR_ROJO}Error al detener servicio: {e}{COLOR_RESET}")
 
 def reiniciar_servicio():
+    """    
+    Solicita el nombre del servicio y ejecuta 'sudo systemctl restart <servicio>'.
+    Muestra mensaje de éxito si se reinicia correctamente.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
     servicio = input(f"{COLOR_NARANJA}Introduce el nombre del servicio a reiniciar: {COLOR_RESET}")
     try:
         subprocess.run(["sudo", "systemctl", "restart", servicio], check=True)
@@ -34,6 +61,11 @@ def reiniciar_servicio():
         print(f"{COLOR_ROJO}Error al reiniciar servicio: {e}{COLOR_RESET}")
 
 def estado_servicio():
+    """   
+    Solicita el nombre del servicio y ejecuta 'systemctl status <servicio>'.
+    Muestra información detallada del estado del servicio.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
     servicio = input(f"{COLOR_NARANJA}Introduce el nombre del servicio a consultar: {COLOR_RESET}")
     try:
         subprocess.run(["systemctl", "status", servicio], check=True)
@@ -41,6 +73,12 @@ def estado_servicio():
         print(f"{COLOR_ROJO}Error al consultar el estado del servicio: {e}{COLOR_RESET}")
 
 def main_menu():
+    """  
+    Muestra un menú con opciones para listar, iniciar, detener, reiniciar y consultar servicios.
+    Ejecuta la función correspondiente según la selección.
+    Incluye opción para volver al menú principal.
+    Manejo de opciones inválidas y bucle infinito hasta salir.
+    """
     while True:
         print(f"{COLOR_CIAN}{TEXTO_NEGRITA}\n--- MENÚ DE GESTIÓN DE SERVICIOS ---{COLOR_RESET}")
         print(f"{COLOR_VERDE}1. Listar servicios activos/inactivos{COLOR_RESET}")

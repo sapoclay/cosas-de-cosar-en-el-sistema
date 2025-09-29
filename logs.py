@@ -1,9 +1,13 @@
-# logs.py
+# Módulo para la gestión y visualización de logs del sistema Linux.
+# Utiliza journalctl para búsqueda avanzada y comandos tradicionales para logs específicos.
+
 from colores import *
 import subprocess
 
+# Función para mostrar las últimas 20 líneas de los logs principales del sistema
 def ver_logs_principales():
     print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Logs principales del sistema:{COLOR_RESET}")
+    # Lista de logs comunes con sus rutas
     logs = [
         ("Syslog", "/var/log/syslog"),
         ("Auth log", "/var/log/auth.log"),
@@ -13,25 +17,32 @@ def ver_logs_principales():
     for nombre, ruta in logs:
         print(f"{COLOR_VERDE}{TEXTO_NEGRITA}{nombre} ({ruta}):{COLOR_RESET}")
         try:
+            # Usa tail -20 para mostrar las últimas 20 líneas de cada log
             resultado = subprocess.run(["sudo", "tail", "-20", ruta], capture_output=True, text=True)
             if resultado.returncode == 0:
                 print(resultado.stdout)
             else:
                 print(f"{COLOR_ROJO}Error al leer {ruta}: {resultado.stderr}{COLOR_RESET}")
         except Exception as e:
+            # Maneja errores de permisos o archivos inexistentes
             print(f"{COLOR_ROJO}Error: {e}{COLOR_RESET}")
         print()
 
+# Buscar patrones en los logs del sistema usando journalctl
 def buscar_en_logs():
+    # Solicita el patrón de búsqueda
     patron = input(f"{COLOR_NARANJA}Introduce el patrón a buscar en los logs: {COLOR_RESET}")
+    # Opción para filtrar por fecha
     usar_fecha = input(f"{COLOR_NARANJA}¿Quieres filtrar por fecha? (s/n): {COLOR_RESET}").lower() == 's'
     fecha_desde = ""
     fecha_hasta = ""
     if usar_fecha:
+        # Solicita fechas en formato específico si se filtra por fecha
         fecha_desde = input(f"{COLOR_NARANJA}Fecha desde (formato YYYY-MM-DD HH:MM:SS, o vacío para no limitar): {COLOR_RESET}")
         fecha_hasta = input(f"{COLOR_NARANJA}Fecha hasta (formato YYYY-MM-DD HH:MM:SS, o vacío para no limitar): {COLOR_RESET}")
     print(f"{COLOR_AMARILLO}Buscando '{patron}' en logs del sistema...{COLOR_RESET}")
     try:
+        # Construye el comando journalctl con grep (-g) y filtros opcionales
         comando = ["sudo", "journalctl", "-g", patron, "--no-pager"]
         if fecha_desde:
             comando.extend(["--since", fecha_desde])
@@ -46,13 +57,14 @@ def buscar_en_logs():
     except Exception as e:
         print(f"{COLOR_ROJO}Error en la búsqueda: {e}{COLOR_RESET}")
 
+# Función para rotar y limpiar logs antiguos usando logrotate
 def limpiar_logs_antiguos():
     print(f"{COLOR_AMARILLO}Rotando logs antiguos...{COLOR_RESET}")
     print(f"{COLOR_CIAN}Esto archivará los logs actuales en archivos comprimidos (ej. syslog.1.gz),")
     print(f"creará nuevos logs vacíos y eliminará los más antiguos según la configuración del sistema.")
     print(f"Esto ayuda a mantener el espacio en disco y mejora el rendimiento.{COLOR_RESET}")
     try:
-        # Usar logrotate para rotar logs
+        # Ejecuta logrotate con la configuración del sistema
         resultado = subprocess.run(["sudo", "logrotate", "-f", "/etc/logrotate.conf"], capture_output=True, text=True)
         if resultado.returncode == 0:
             print(f"{COLOR_VERDE}Logs rotados correctamente. Los logs antiguos han sido archivados y comprimidos.{COLOR_RESET}")
@@ -61,8 +73,10 @@ def limpiar_logs_antiguos():
     except Exception as e:
         print(f"{COLOR_ROJO}Error: {e}{COLOR_RESET}")
 
+# Función principal del menú de gestión de logs
 def main_menu():
     while True:
+
         print(f"{COLOR_CIAN}{TEXTO_NEGRITA}\n--- GESTIÓN DE LOGS DEL SISTEMA ---{COLOR_RESET}")
         print(f"{COLOR_VERDE}1. Ver logs principales{COLOR_RESET}")
         print(f"{COLOR_VERDE}2. Buscar en logs{COLOR_RESET}")
@@ -80,8 +94,10 @@ def main_menu():
         else:
             print(f"{COLOR_ROJO}Opción no válida. Inténtalo de nuevo.{COLOR_RESET}")
 
+# Bloque principal
 if __name__ == "__main__":
     try:
         main_menu()
     except KeyboardInterrupt:
+        # interrupción del usuario (Ctrl+C)
         print(f"\n{COLOR_ROJO}Programa cerrado por el usuario (Ctrl+C).{COLOR_RESET}")

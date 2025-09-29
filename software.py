@@ -1,5 +1,12 @@
-# software.py
-# Utilidades para gestión de software y repositorios en Linux
+"""
+Módulo de software: Herramientas para gestión de paquetes y repositorios en sistemas Debian/Ubuntu.
+
+Este módulo permite actualizar repositorios, instalar/buscar/eliminar paquetes,
+gestionar repositorios, actualizar el sistema, limpiar paquetes innecesarios
+y exportar listas de paquetes. Utiliza comandos apt y dpkg para la gestión.
+Todas las operaciones que requieren privilegios usan sudo.
+"""
+
 from colores import (
     COLOR_RESET, COLOR_VERDE, COLOR_AMARILLO, COLOR_ROJO, COLOR_CIAN, COLOR_NARANJA,
     TEXTO_NEGRITA, TEXTO_SUBRAYADO
@@ -8,6 +15,11 @@ import subprocess
 import sys
 
 def actualizar_repositorios():
+    """    
+    Ejecuta 'sudo apt update' para sincronizar la lista de paquetes.
+    Muestra mensaje de éxito si se actualiza correctamente.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
     print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Actualizando listado de repositorios...{COLOR_RESET}")
     try:
         subprocess.run(["sudo", "apt", "update"], check=True)
@@ -16,6 +28,10 @@ def actualizar_repositorios():
         print(f"{COLOR_ROJO}Error al actualizar repositorios: {e}{COLOR_RESET}")
 
 def agregar_repositorio():
+    """   
+    Solicita la URL o PPA del repositorio y ejecuta 'sudo add-apt-repository'.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
     repo = input(f"{COLOR_NARANJA}Introduce el repositorio a añadir (ej: ppa:nombre/ppa): {COLOR_RESET}")
     try:
         subprocess.run(["sudo", "add-apt-repository", repo], check=True)
@@ -24,6 +40,11 @@ def agregar_repositorio():
         print(f"{COLOR_ROJO}Error al añadir el repositorio: {e}{COLOR_RESET}")
 
 def instalar_paquete():
+    """   
+    Solicita el nombre del paquete y ejecuta 'sudo apt install -y'.
+    El flag -y confirma automáticamente la instalación.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
     paquete = input(f"{COLOR_NARANJA}Introduce el nombre del paquete a instalar: {COLOR_RESET}")
     try:
         subprocess.run(["sudo", "apt", "install", paquete, "-y"], check=True)
@@ -32,6 +53,10 @@ def instalar_paquete():
         print(f"{COLOR_ROJO}Error al instalar el paquete: {e}{COLOR_RESET}")
 
 def buscar_paquete():
+    """   
+    Solicita el nombre del paquete y ejecuta 'apt search' para mostrar resultados.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
     paquete = input(f"{COLOR_NARANJA}Introduce el nombre del paquete a buscar: {COLOR_RESET}")
     try:
         subprocess.run(["apt", "search", paquete], check=True)
@@ -40,6 +65,10 @@ def buscar_paquete():
 
 
 def consultar_repositorios():
+    """
+    Muestra líneas deb de /etc/apt/sources.list y lista archivos en sources.list.d.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
     print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Repositorios instalados en el sistema:{COLOR_RESET}")
     try:
         subprocess.run(["grep", "^deb", "/etc/apt/sources.list"], check=False)
@@ -48,6 +77,11 @@ def consultar_repositorios():
         print(f"{COLOR_ROJO}Error al consultar los repositorios: {e}{COLOR_RESET}")
 
 def eliminar_repositorio():
+    """    
+    Lista archivos en /etc/apt/sources.list.d y permite seleccionar uno para eliminar.
+    Ejecuta 'sudo rm' en el archivo seleccionado.
+    Manejo de errores: Captura excepciones y validaciones de entrada.
+    """
     print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Eliminar repositorio:{COLOR_RESET}")
     print(f"{COLOR_AMARILLO}Archivos de repositorios en /etc/apt/sources.list.d/{COLOR_RESET}")
     try:
@@ -73,6 +107,10 @@ def eliminar_repositorio():
 
 
 def actualizar_paquetes():
+    """    
+    Ejecuta 'sudo apt upgrade -y' para actualizar paquetes instalados.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
     print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Actualizando todos los paquetes del sistema...{COLOR_RESET}")
     try:
         subprocess.run(["sudo", "apt", "upgrade", "-y"], check=True)
@@ -81,6 +119,10 @@ def actualizar_paquetes():
         print(f"{COLOR_ROJO}Error al actualizar los paquetes: {e}{COLOR_RESET}")
 
 def info_paquete():
+    """   
+    Solicita el nombre del paquete y ejecuta 'apt show' para mostrar detalles.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
     paquete = input(f"{COLOR_NARANJA}Introduce el nombre del paquete para ver información detallada: {COLOR_RESET}")
     try:
         subprocess.run(["apt", "show", paquete], check=True)
@@ -88,6 +130,10 @@ def info_paquete():
         print(f"{COLOR_ROJO}Error al mostrar la información del paquete: {e}{COLOR_RESET}")
 
 def limpiar_paquetes():
+    """    
+    Ejecuta 'sudo apt autoremove -y' para eliminar paquetes huérfanos y 'sudo apt clean' para limpiar caché.
+    Manejo de errores: Captura excepciones y muestra errores.
+    """
     print(f"{COLOR_CIAN}{TEXTO_NEGRITA}Limpiando paquetes y dependencias no necesarias...{COLOR_RESET}")
     try:
         subprocess.run(["sudo", "apt", "autoremove", "-y"], check=True)
@@ -97,6 +143,11 @@ def limpiar_paquetes():
         print(f"{COLOR_ROJO}Error al limpiar paquetes: {e}{COLOR_RESET}")
 
 def exportar_paquetes():
+    """    
+    Solicita el nombre del archivo y usa 'dpkg-query' para obtener la lista de paquetes instalados.
+    Escribe la lista en el archivo especificado.
+    Manejo de errores: Captura excepciones al escribir archivo.
+    """
     archivo = input(f"{COLOR_NARANJA}Introduce el nombre del archivo para exportar la lista de paquetes: {COLOR_RESET}")
     try:
         with open(archivo, "w") as f:
@@ -106,6 +157,9 @@ def exportar_paquetes():
         print(f"{COLOR_ROJO}Error al exportar la lista de paquetes: {e}{COLOR_RESET}")
 
 def main_menu():
+    """
+    Función del menú principal para gestión de software.
+    """
     while True:
         print(f"{COLOR_CIAN}{TEXTO_NEGRITA}\n--- MENÚ DE GESTIÓN DE SOFTWARE ---{COLOR_RESET}")
         print(f"{COLOR_VERDE}1. Actualizar listado de repositorios{COLOR_RESET}")
