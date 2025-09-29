@@ -1,5 +1,7 @@
 # COSAS DE COSAR EN EL SISTEMA
 
+<img width="761" height="463" alt="cosas-de-cosar-en-el-sistema" src="https://github.com/user-attachments/assets/56267341-479b-4ed2-bc38-84ec69277254" />
+
 Este es un toolkit modular interactivo que escribí hace un par de años para la administración de sistemas Linux (concretamente Ubuntu), diseñado para facilitar tareas comunes de gestión del sistema a través de una interfaz de menú intuitiva.
 
 ## Descripción
